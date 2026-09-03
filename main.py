@@ -43,9 +43,9 @@ def summarize_expenses(start_date,end_date,category=None):
     """ Summarize expenses between date range by category"""
     with sqlite3.connect(DB_Path) as conn:
         if category:
-            cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? and category=? group by category",(start_date,end_date,category))
+            cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? and category=? group by category order by total DESC",(start_date,end_date,category))
         else:
-            cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? group by category",(start_date,end_date))
+            cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? group by category order by total DESC",(start_date,end_date))
         cols=[d[0] for d in cur.description]
         return [dict(zip(cols,row)) for row in cur.fetchall()]
     
