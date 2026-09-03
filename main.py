@@ -48,6 +48,20 @@ def summarize_expenses(start_date,end_date,category=None):
             cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? group by category",(start_date,end_date))
         cols=[d[0] for d in cur.description]
         return [dict(zip(cols,row)) for row in cur.fetchall()]
+    
+@mcp.tool()
+def edit_expense(id,amount,category,date,subcategory='',note=''):
+    """Edit an existing expense."""
+    with sqlite3.connect(DB_Path) as conn:
+        conn.execute("UPDATE expenses SET amount=?, category=?, date=?, subcategory=?, note=? WHERE id=?",(amount, category, date, subcategory, note, id))
+        return {"status": "ok", "id": id}
+    
+@mcp.tool()
+def delete_expense(id):
+    """Delete an expense from the database."""
+    with sqlite3.connect(DB_Path) as conn:
+        conn.execute("DELETE FROM expenses WHERE id=?",(id,))
+        return {"status": "ok", "id": id}
 
 @mcp.resource("expense://category",mime_type="application/json")
 def categories():
