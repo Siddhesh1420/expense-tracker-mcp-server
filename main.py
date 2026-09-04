@@ -28,12 +28,33 @@ def get_db_connection():
 get_db_connection()
 
 @mcp.tool()
-async def add_expense(date,amount,category,subcategory='',note=''):
-    """Add an expense to the database."""
-    async with aiosqlite.connect(DB_Path) as conn:
-        cur=await conn.execute("INSERT INTO expenses (amount, category, date, subcategory, note) VALUES (?, ?, ?, ?, ?)",(amount, category, date, subcategory, note))
-        await conn.commit()
-        return {"status": "ok" , "id":cur.lastrowid}
+async def add_expense(date, amount, category, subcategory='', note=''):
+    print("ADD_EXPENSE CALLED")
+    print("DB PATH:", DB_Path)
+    print("PARAMS:", date, amount, category, subcategory, note)
+
+    try:
+        async with aiosqlite.connect(DB_Path) as conn:
+            print("DATABASE CONNECTED")
+
+            cur = await conn.execute(
+                "INSERT INTO expenses (amount, category, date, subcategory, note) VALUES (?, ?, ?, ?, ?)",
+                (amount, category, date, subcategory, note)
+            )
+
+            await conn.commit()
+
+            print("INSERT SUCCESSFUL")
+            print("ROW ID:", cur.lastrowid)
+
+            return {
+                "status": "ok",
+                "id": cur.lastrowid
+            }
+
+    except Exception as e:
+        print("ADD_EXPENSE ERROR:", repr(e))
+        raise
 
 @mcp.tool()
 async def list_expenses(start_date,end_date):
