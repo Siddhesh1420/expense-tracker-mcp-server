@@ -3,6 +3,7 @@ import os
 import sqlite3
 import json
 import tempfile
+import aiosqlite
 
 TEMP_DIR = tempfile.gettempdir()
 DB_Path=os.path.join(TEMP_DIR, "expenses.db")
@@ -26,43 +27,46 @@ def get_db_connection():
 get_db_connection()
 
 @mcp.tool()
-def add_expense(date,amount,category,subcategory='',note=''):
+async def add_expense(date,amount,category,subcategory='',note=''):
     """Add an expense to the database."""
-    with sqlite3.connect(DB_Path) as conn:
-        cur=conn.execute("INSERT INTO expenses (amount, category, date, subcategory, note) VALUES (?, ?, ?, ?, ?)",(amount, category, date, subcategory, note))
+    async with aiosqlite.connect(DB_Path) as conn:
+        cur=await conn.execute("INSERT INTO expenses (amount, category, date, subcategory, note) VALUES (?, ?, ?, ?, ?)",(amount, category, date, subcategory, note))
+        await conn.commit()
         return {"status": "ok" , "id":cur.lastrowid}
 
 @mcp.tool()
-def list_expenses(start_date,end_date):
+async def list_expenses(start_date,end_date):
     """List expenses between date range."""
-    with sqlite3.connect(DB_Path) as conn:
-        cur=conn.execute("SELECT id,amount,category,date,subcategory,note FROM expenses WHERE date BETWEEN ? AND ? ORDER BY id ASC",(start_date,end_date))
+    async with aiosqlite.connect(DB_Path) as conn:
+        cur=await conn.execute("SELECT id,amount,category,date,subcategory,note FROM expenses WHERE date BETWEEN ? AND ? ORDER BY id ASC",(start_date,end_date))
         cols=[d[0] for d in cur.description]
-        return [dict(zip(cols,row)) for row in cur.fetchall()]
+        return [dict(zip(cols,row)) for row in await cur.fetchall()]
 
 @mcp.tool()
-def summarize_expenses(start_date,end_date,category=None):
+async def summarize_expenses(start_date,end_date,category=None):
     """ Summarize expenses between date range by category"""
-    with sqlite3.connect(DB_Path) as conn:
+    async with aiosqlite.connect(DB_Path) as conn:
         if category:
             cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? and category=? group by category order by total DESC",(start_date,end_date,category))
         else:
-            cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? group by category order by total DESC",(start_date,end_date))
+            cur=await conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? group by category order by total DESC",(start_date,end_date))
         cols=[d[0] for d in cur.description]
-        return [dict(zip(cols,row)) for row in cur.fetchall()]
+        return [dict(zip(cols,row)) for row in await cur.fetchall()]
     
 @mcp.tool()
-def edit_expense(id,amount,category,date,subcategory='',note=''):
+async def edit_expense(id,amount,category,date,subcategory='',note=''):
     """Edit an existing expense."""
-    with sqlite3.connect(DB_Path) as conn:
-        conn.execute("UPDATE expenses SET amount=?, category=?, date=?, subcategory=?, note=? WHERE id=?",(amount, category, date, subcategory, note, id))
+    async with aiosqlite.connect(DB_Path) as conn:
+        await conn.execute("UPDATE expenses SET amount=?, category=?, date=?, subcategory=?, note=? WHERE id=?",(amount, category, date, subcategory, note, id))
+        await conn.commit()
         return {"status": "ok", "id": id}
     
 @mcp.tool()
-def delete_expense(id):
+async def delete_expense(id):
     """Delete an expense from the database."""
-    with sqlite3.connect(DB_Path) as conn:
-        conn.execute("DELETE FROM expenses WHERE id=?",(id,))
+    async with aiosqlite.connect(DB_Path) as conn:
+        await conn.execute("DELETE FROM expenses WHERE id=?",(id,))
+        await conn.commit()
         return {"status": "ok", "id": id}
 
 @mcp.resource("expense://category",mime_type="application/json")
