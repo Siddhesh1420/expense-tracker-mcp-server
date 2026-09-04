@@ -2,7 +2,6 @@ from fastmcp import FastMCP
 import os
 import sqlite3
 import json
-from fastmcp.server.dependencies import get_http_request
 import aiosqlite
 
 DB_Path=os.getenv("DB_PATH",os.path.join(os.path.dirname(__file__), "expenses.db"))
@@ -29,14 +28,6 @@ get_db_connection()
 @mcp.tool()
 async def add_expense(date,amount,category,subcategory='',note=''):
     """Add an expense to the database."""
-    request = get_http_request()
-
-    print("REQUEST USER:", request.user)
-    print("USER TYPE:", type(request.user))
-    print(
-        "USER ATTRS:",
-        vars(request.user) if hasattr(request.user, "__dict__") else "NO __dict__"
-    )
     async with aiosqlite.connect(DB_Path) as conn:
         cur=await conn.execute("INSERT INTO expenses (amount, category, date, subcategory, note) VALUES (?, ?, ?, ?, ?)",(amount, category, date, subcategory, note))
         await conn.commit()
