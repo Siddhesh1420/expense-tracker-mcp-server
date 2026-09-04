@@ -1,4 +1,5 @@
 from fastmcp import FastMCP
+from fastmcp.server.auth.providers.google import GoogleProvider
 import os
 import sqlite3
 import json
@@ -9,8 +10,9 @@ TEMP_DIR = tempfile.gettempdir()
 DB_Path=os.path.join(TEMP_DIR, "expenses.db")
 CATEGORIES_path=os.path.join(os.path.dirname(__file__), "category.json")
 
+auth = GoogleProvider(client_id=os.environ["GOOGLE_CLIENT_ID"],client_secret=os.environ["GOOGLE_CLIENT_SECRET"],base_url="https://friendly-magenta-ant.fastmcp.app")
 # Create a FastMCP server instance
-mcp = FastMCP(name="Expense Tracker")
+mcp = FastMCP(name="Expense Tracker",auth=auth)
 
 def get_db_connection():
     """Get a connection to the SQLite database."""
@@ -47,7 +49,7 @@ async def summarize_expenses(start_date,end_date,category=None):
     """ Summarize expenses between date range by category"""
     async with aiosqlite.connect(DB_Path) as conn:
         if category:
-            cur=conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? and category=? group by category order by total DESC",(start_date,end_date,category))
+            cur= await conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? and category=? group by category order by total DESC",(start_date,end_date,category))
         else:
             cur=await conn.execute("SELECT category,SUM(amount) as total from expenses where date between ? and ? group by category order by total DESC",(start_date,end_date))
         cols=[d[0] for d in cur.description]
