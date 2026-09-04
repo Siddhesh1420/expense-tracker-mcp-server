@@ -10,7 +10,7 @@ TEMP_DIR = tempfile.gettempdir()
 DB_Path=os.path.join(TEMP_DIR, "expenses.db")
 CATEGORIES_path=os.path.join(os.path.dirname(__file__), "category.json")
 
-auth = GoogleProvider(client_id=os.environ["GOOGLE_CLIENT_ID"],client_secret=os.environ["GOOGLE_CLIENT_SECRET"],base_url="https://friendly-magenta-ant.fastmcp.app")
+auth = GoogleProvider(client_id=os.environ["GOOGLE_CLIENT_ID"] or "",client_secret=os.environ["GOOGLE_CLIENT_SECRET"] or "",base_url="https://friendly-magenta-ant.fastmcp.app")
 # Create a FastMCP server instance
 mcp = FastMCP(name="Expense Tracker",auth=auth)
 
