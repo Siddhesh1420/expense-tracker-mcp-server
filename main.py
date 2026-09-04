@@ -1,5 +1,5 @@
 from fastmcp import FastMCP
-# from fastmcp.server.auth.providers.google import GoogleProvider
+from fastmcp.server.auth.providers.google import GoogleProvider
 import os
 import sqlite3
 import json
@@ -9,10 +9,9 @@ import aiosqlite
 DB_Path=os.getenv("DB_PATH",os.path.join(os.path.dirname(__file__), "expenses.db"))
 CATEGORIES_path=os.path.join(os.path.dirname(__file__), "category.json")
 
-# auth = GoogleProvider(client_id=os.getenv("GOOGLE_CLIENT_ID") or "",client_secret=os.getenv("GOOGLE_CLIENT_SECRET") or "",base_url="https://friendly-magenta-ant.fastmcp.app")
+auth = GoogleProvider(client_id=os.getenv("GOOGLE_CLIENT_ID") or "",client_secret=os.getenv("GOOGLE_CLIENT_SECRET") or "",base_url="https://friendly-magenta-ant.fastmcp.app")
 # # Create a FastMCP server instance
-# mcp = FastMCP(name="Expense Tracker",auth=auth)
-mcp = FastMCP(name="Expense Tracker")
+mcp = FastMCP(name="Expense Tracker",auth=auth)
 
 def get_db_connection():
     """Get a connection to the SQLite database."""
